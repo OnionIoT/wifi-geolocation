@@ -13,6 +13,6 @@ https://developers.google.com/maps/documentation/geolocation/get-api-key
   opkg install curl
 
 4. Run the following command:
-python /root/wifi-geolocation/main.py &
+* python /root/wifi-geolocation/main.py &
 
 The program will now scan for wifi and display the gps location based on that.
