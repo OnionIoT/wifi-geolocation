@@ -6,7 +6,7 @@ import urllib3
 
 #get your google api key from here : 
 #https://developers.google.com/maps/documentation/geolocation/get-api-key
-API_KEY = "Your_API_Key"
+API_KEY = "paste your API key here"
 
 
 # scan wifi networks in range
