@@ -30,26 +30,27 @@ def __main__():
         gps_check = json.loads(gps)
         
         # if the geolocation was not successful, try again from the beginning
-      	if str(gps_check['error']['errors'][0]['reason'])=='dailyLimitExceeded':
-      		helpers.displayError(errors["dailyLimitExceeded"])
-      		sleep(SCAN_INTERVAL)
-      		continue
-      	elif str(gps_check['error']['errors'][0]['reason'])=='keyInvalid':
-      		helpers.displayError(errors["keyInvalid"])
-      		sleep(SCAN_INTERVAL)
-      		continue
-      	elif str(gps_check['error']['errors'][0]['reason'])=='userRateLimitExceeded':
-      		helpers.displayError(errors["userRateLimitExceeded"])
-      		sleep(SCAN_INTERVAL)
-      		continue
-      	elif str(gps_check['error']['errors'][0]['reason'])=='notFound':
-      		helpers.displayError(errors["notFound"])
-      		sleep(SCAN_INTERVAL)
-      		continue
-      	else:
-      		helpers.displayError(errors["parseError"])
-      		sleep(SCAN_INTERVAL)
-      		continue
+	if 'error' in gps_check:
+		if str(gps_check['error']['errors'][0]['reason'])=='dailyLimitExceeded':
+			helpers.displayError(errors["dailyLimitExceeded"])
+			sleep(SCAN_INTERVAL)
+			continue
+		elif str(gps_check['error']['errors'][0]['reason'])=='keyInvalid':
+			helpers.displayError(errors["keyInvalid"])
+			sleep(SCAN_INTERVAL)
+			continue
+		elif str(gps_check['error']['errors'][0]['reason'])=='userRateLimitExceeded':
+			helpers.displayError(errors["userRateLimitExceeded"])
+			sleep(SCAN_INTERVAL)
+			continue
+		elif str(gps_check['error']['errors'][0]['reason'])=='notFound':
+			helpers.displayError(errors["notFound"])
+			sleep(SCAN_INTERVAL)
+			continue
+		else:
+			helpers.displayError(errors["parseError"])
+			sleep(SCAN_INTERVAL)
+			continue
       		
       	# write to screen
         
