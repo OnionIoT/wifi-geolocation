@@ -1,66 +1,73 @@
 # this program will periodically scan nearby wifi networks and geolocate and print the gps coordinates
 
-import helpers, os
-import json
+import json, os, sys
+import helpers
 from time import sleep
 
-SCAN_INTERVAL = 5
+# find the directory of the script
+dirName = os.path.dirname(os.path.abspath(__file__))
+
+# defines & global vars
+DEFAULT_SCAN_INTERVAL = 5
+CONFIG_FILE = 'config.json'
 
 fieldLengths = {
-    "Latitude": 9,
-    "Longitude": 9,
+	"Latitude": 9,
+	"Longitude": 9,
 }
 
-errors = {
-	"dailyLimitExceeded": "Daily limit exceeded. The Program will try again shortly.",
-	"keyInvalid": "Invalid API Key. The Program will try again shortly.",
-	"userRateLimitExceeded": "Exceeded the request per second per user limit configured by you",
-	"notFound": "Wifi Access Point not geolocated. The Program will try again shortly.",
-	"parseError": "Request body is not valid JSON. The Program will try again shortly."
-}
+config = {}
+
+
+# read configuration file
+def readConfigFile():
+	global config
+	filepath = '/'.join([dirName, CONFIG_FILE])
+	with open( filepath ) as f:
+		try:
+			config = json.load(f)
+		except:
+			print("ERROR: expecting JSON file")
+			return False
+		if 'apiKey' not in config:
+			print("ERROR: expecting config file to have 'apiKey' member")
+			return False
+		if 'scanInterval' not in config:
+			config['scanInterval'] = DEFAULT_SCAN_INTERVAL
+		print('> Successfully read config file')
+		print(config)
+		return True
 
 def __main__():
-    while True:
-        # scan the wifi networks
-        networks = helpers.scanWifi()
+	global config
+	if not readConfigFile():
+		sys.exit()
 
-        # get the gps location
-        gps = helpers.getGps()
-        
-        gps_check = json.loads(gps)
-        
-        # if the geolocation was not successful, try again from the beginning
-	if 'error' in gps_check:
-		if str(gps_check['error']['errors'][0]['reason'])=='dailyLimitExceeded':
-			helpers.displayError(errors["dailyLimitExceeded"])
-			sleep(SCAN_INTERVAL)
-			continue
-		elif str(gps_check['error']['errors'][0]['reason'])=='keyInvalid':
-			helpers.displayError(errors["keyInvalid"])
-			sleep(SCAN_INTERVAL)
-			continue
-		elif str(gps_check['error']['errors'][0]['reason'])=='userRateLimitExceeded':
-			helpers.displayError(errors["userRateLimitExceeded"])
-			sleep(SCAN_INTERVAL)
-			continue
-		elif str(gps_check['error']['errors'][0]['reason'])=='notFound':
-			helpers.displayError(errors["notFound"])
-			sleep(SCAN_INTERVAL)
-			continue
+	while True:
+		# scan the wifi networks
+		networks = helpers.scanWifi()
+
+		# get the gps location
+		gps = helpers.getGps(networks, config['apiKey'])
+		print('got gps result:')
+		print(gps)
+
+		# check if received valid data
+		errorCheck = helpers.gpsErrorCheck(json.loads(gps))
+		if errorCheck is False:
+			print('Successfully retrieved geolocation data')
+			# write to screen
+			helpers.displayLocation(
+				gps,
+				fieldLengths
+			)
 		else:
-			helpers.displayError(errors["parseError"])
-			sleep(SCAN_INTERVAL)
-			continue
-      		
-      	# write to screen
-        
-        helpers.displayLocation(
-			gps,
-			fieldLengths
-		)
+			# geolocation not successful, print the error
+			print('Geolocation not successful: ' + errorCheck)
+			helpers.displayError(errorCheck)
 
-        # sleep
-        sleep(SCAN_INTERVAL)
-        
+		# sleep
+		sleep(config['scanInterval'])
+
 if __name__ == '__main__':
-    __main__()
+	__main__()
