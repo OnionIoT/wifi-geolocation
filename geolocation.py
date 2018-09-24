@@ -14,6 +14,43 @@ errors = {
 	"parseError": "Request body is not valid JSON. The Program will try again shortly."
 }
 
+fieldLengths = {
+	"Latitude": 9,
+	"Longitude": 9,
+}
+
+#### ALL IN ONE FUNCTIONS ####
+# scan environment wifi networks and use API to get location
+# returns dictionary of longitude and latitude
+def getGeolocation(apiKey):
+    # scan the wifi networks
+    networks = scanWifi()
+
+    # get the geo location data from the API
+    data = getGps(networks, apiKey)
+
+    return data
+
+# performs error checking and displays data on OLED Expansion
+#   displays the GPS coordinates if succesful, error message if not
+def displayGeolocation(apiData):
+    # check if received valid data
+    errorCheck = gpsErrorCheck(json.loads(apiData))
+    if errorCheck is False:
+        print('Successfully retrieved geolocation data')
+        # write to screen
+        displayLocation(
+            apiData,
+            fieldLengths
+        )
+    else:
+        # geolocation not successful, print the error
+        print('Geolocation not successful: ' + errorCheck)
+        displayError(errorCheck)
+
+
+#### HELPER FUNCTIONS ####
+
 # scan wifi networks in range
 # returns a list of wifi dictionaries
 def scanWifi():
@@ -56,7 +93,6 @@ def getGps(networks, apiKey):
 # check for error in API data
 def gpsErrorCheck(apiData):
     errorDetected = False
-    print(apiData)
     if 'error' in apiData:
         if str(apiData['error']['errors'][0]['reason'])=='dailyLimitExceeded':
             errorDetected = errors["dailyLimitExceeded"]
